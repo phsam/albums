@@ -1,56 +1,17 @@
 {
-  "RootLayout": {
-    "home_link": "Home",
-    "about_link": "About",
-    "counter_link": "Counter",
-    "portfolio_link": "Portfolio",
-    "sign_in_link": "Sign in",
-    "sign_up_link": "Sign up"
-  },
   "BaseTemplate": {
     "description": "Starter code for your Nextjs Boilerplate with Tailwind CSS",
     "footer_text": "© {year} {name}. Made with <author></author>.",
     "main_navigation_label": "Main navigation"
   },
   "Index": {
-    "meta_title": "Next.js Boilerplate Presentation",
-    "meta_description": "Next js Boilerplate is the perfect starter code for your project. Build your React application with the Next.js framework.",
-    "sponsors_title": "Sponsors",
-    "zap_emoji_label": "Zap"
-  },
-  "Counter": {
-    "meta_title": "Counter",
-    "meta_description": "An example of DB operation",
-    "security_powered_by": "Security, bot detection and rate limiting powered by"
-  },
-  "CounterForm": {
-    "presentation": "The counter is stored in the database and incremented by the value you provide.",
-    "label_increment": "Increment by",
-    "button_increment": "Increment",
-    "error_increment_range": "Value must be between 1 and 3"
-  },
-  "CurrentCount": {
-    "count": "Count: {count}"
-  },
-  "About": {
-    "meta_title": "About",
-    "meta_description": "About page description",
-    "about_paragraph": "Welcome to our About page! We are a team of passionate individuals dedicated to creating amazing software.",
-    "translation_powered_by": "Translation powered by"
-  },
-  "Portfolio": {
-    "meta_title": "Portfolio",
-    "meta_description": "Welcome to my portfolio page!",
-    "presentation": "Welcome to my portfolio page! Here you will find a carefully curated collection of my work and accomplishments. Through this portfolio, I'm to showcase my expertise, creativity, and the value I can bring to your projects.",
-    "portfolio_name": "Portfolio {name}",
-    "error_reporting_powered_by": "Error reporting powered by"
-  },
-  "PortfolioSlug": {
-    "meta_title": "Portfolio {slug}",
-    "meta_description": "Portfolio {slug} description",
-    "header": "Portfolio {slug}",
-    "content": "Created a set of promotional materials and branding elements for a corporate event. Crafted a visually unified theme, encompassing a logo, posters, banners, and digital assets. Integrated the client's brand identity while infusing it with a contemporary and innovative approach.",
-    "code_review_powered_by": "Code review powered by"
+    "meta_title": "Albums",
+    "meta_description": "A personal vinyl record collection.",
+    "total_records": "{count} records",
+    "no_collection": "No collection connected yet.",
+    "prev": "← Previous",
+    "next": "Next →",
+    "page_of": "Page {page} of {pages}"
   },
   "SignIn": {
     "meta_title": "Sign in",
@@ -69,8 +30,49 @@
     "meta_title": "Dashboard",
     "meta_description": "Manage your account from the dashboard.",
     "dashboard_link": "Dashboard",
+    "collection_link": "Collection",
     "user_profile_link": "Manage your account",
     "sign_out": "Sign out"
+  },
+  "CollectionPage": {
+    "meta_title": "My collection",
+    "meta_description": "Your Discogs record collection.",
+    "connect_prompt": "Connect your Discogs account to view your collection.",
+    "connect_button": "Connect Discogs",
+    "connected_as": "Connected as {username}",
+    "total_records": "{count} records",
+    "sort_label": "Sort:",
+    "sort_added": "Added",
+    "sort_artist": "Artist",
+    "sort_title": "Title",
+    "sort_year": "Year",
+    "prev": "← Previous",
+    "next": "Next →",
+    "page_of": "Page {page} of {pages}"
+  },
+  "SearchPage": {
+    "meta_title": "Search",
+    "meta_description": "Search the Discogs database for releases.",
+    "placeholder": "Search releases, artists, labels…",
+    "search_button": "Search",
+    "results_count": "{count} results",
+    "empty_state": "Search for an album, artist, or label to get started.",
+    "prev": "← Previous",
+    "next": "Next →",
+    "page_of": "Page {page} of {pages}"
+  },
+  "ReleasePage": {
+    "back_link": "Albums",
+    "year": "Year",
+    "country": "Country",
+    "label": "Label",
+    "format": "Format",
+    "genre": "Genre",
+    "style": "Style",
+    "community": "Community",
+    "have_want": "{have} have / {want} want",
+    "tracklist": "Tracklist",
+    "notes": "Notes"
   },
   "LocaleSwitcher": {
     "change_language": "Change language"

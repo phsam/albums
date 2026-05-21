@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -12,6 +12,19 @@ import { integer, pgTable, serial, timestamp } from 'drizzle-orm/pg-core';
 
 // Need a database for production? Check out https://get.neon.com/BMFYNtx
 // Tested and compatible with Next.js Boilerplate
+
+export const discogsTokensSchema = pgTable('discogs_tokens', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull().unique(),
+  accessToken: text('access_token').notNull(),
+  accessTokenSecret: text('access_token_secret').notNull(),
+  discogsUsername: text('discogs_username').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
 
 export const counterSchema = pgTable('counter', {
   id: serial('id').primaryKey(),

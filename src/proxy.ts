@@ -10,6 +10,8 @@ const handleI18nRouting = createMiddleware(routing);
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/:locale/dashboard(.*)']);
 
+const isDiscogsOAuth = createRouteMatcher(['/api/discogs/oauth/(.*)']);
+
 const isAuthPage = createRouteMatcher([
   '/sign-in(.*)',
   '/:locale/sign-in(.*)',
@@ -43,7 +45,7 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   }
 
   // Clerk keyless mode doesn't work with i18n, this is why we need to run the middleware conditionally
-  if (isAuthPage(request) || isProtectedRoute(request)) {
+  if (isAuthPage(request) || isProtectedRoute(request) || isDiscogsOAuth(request)) {
     // Match Clerk's documented middleware composition pattern, `return await` is not necessary.
     // oxlint-disable-next-line typescript/return-await
     return clerkMiddleware(async (auth, req) => {
@@ -57,6 +59,10 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
         });
       }
 
+      if (isDiscogsOAuth(req)) {
+        return NextResponse.next();
+      }
+
       return handleI18nRouting(req);
     })(request, event);
   }
@@ -68,5 +74,5 @@ export const config = {
   // Match all pathnames except for
   // - … if they start with `/_next`, `/_vercel` or `monitoring`
   // - … the ones containing a dot (e.g. `favicon.ico`)
-  matcher: '/((?!_next|_vercel|monitoring|api|.*\\..*).*)',
+  matcher: ['/((?!_next|_vercel|monitoring|api|.*\\..*).*)', '/api/discogs/oauth/(.*)'],
 };

@@ -6,6 +6,12 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 // Define the base Next.js configuration
 const baseConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.discogs.com' },
+      { protocol: 'https', hostname: 'img.discogs.com' },
+    ],
+  },
   devIndicators: {
     position: 'bottom-right',
   },
