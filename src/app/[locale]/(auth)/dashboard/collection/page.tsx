@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import Image from 'next/image';
+import { CollectionView } from '@/components/CollectionView';
 import { db } from '@/libs/DB';
 import { getUserCollection } from '@/libs/Discogs';
 import { Link } from '@/libs/I18nNavigation';
@@ -10,7 +10,6 @@ import { discogsTokensSchema } from '@/models/Schema';
 
 type CollectionPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ page?: string; sort?: string }>;
 };
 
 export async function generateMetadata(props: CollectionPageProps): Promise<Metadata> {
@@ -24,7 +23,6 @@ export async function generateMetadata(props: CollectionPageProps): Promise<Meta
 
 export default async function CollectionPage(props: CollectionPageProps) {
   const { locale } = await props.params;
-  const { page = '1', sort = 'added' } = await props.searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations({ locale, namespace: 'CollectionPage' });
@@ -54,85 +52,44 @@ export default async function CollectionPage(props: CollectionPageProps) {
     tokenRow.discogsUsername,
     tokenRow.accessToken,
     tokenRow.accessTokenSecret,
-    { page, sort },
+    { perPage: '100' },
   );
 
-  const { releases, pagination } = collection;
+  const seenInstances = new Set<number>();
+  const uniqueReleases = collection.releases.filter((r) => {
+    if (seenInstances.has(r.instance_id)) {
+      return false;
+    }
+    seenInstances.add(r.instance_id);
+    return true;
+  });
+
+  const avatarInitial = tokenRow.discogsUsername.charAt(0).toUpperCase();
 
   return (
-    <div className="py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          {t('connected_as', { username: tokenRow.discogsUsername })}
-          {' · '}
-          {t('total_records', { count: pagination.items })}
-        </p>
-        <div className="flex gap-3 text-sm">
-          <span className="text-gray-500">{t('sort_label')}</span>
-          {(['added', 'artist', 'title', 'year'] as const).map((s) => (
-            <Link
-              key={s}
-              href={`/dashboard/collection?sort=${s}&page=1`}
-              className={
-                sort === s ? 'font-semibold text-gray-900' : 'text-gray-500 hover:text-gray-900'
-              }
-            >
-              {t(`sort_${s}`)}
-            </Link>
-          ))}
+    <div className="px-6 py-7">
+      <header className="mb-6 flex items-center gap-3.5">
+        <div className="flex size-[42px] shrink-0 items-center justify-center rounded-full bg-vinyl-gold text-[17px] font-bold text-vinyl-gold-foreground">
+          {avatarInitial}
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {releases.map((item) => {
-          const info = item.basic_information;
-          const artist = info.artists.map((a) => a.name).join(', ');
-          return (
-            <Link key={item.id} href={`/releases/${info.id}`} className="group block">
-              <div className="relative aspect-square overflow-hidden rounded bg-gray-100">
-                {info.cover_image ? (
-                  <Image
-                    src={info.cover_image}
-                    alt={info.title}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                    className="object-cover transition-opacity group-hover:opacity-80"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-gray-400">♪</div>
-                )}
-              </div>
-              <p className="mt-2 truncate text-sm font-medium text-gray-900">{info.title}</p>
-              <p className="truncate text-xs text-gray-500">{artist}</p>
-              {info.year > 0 && <p className="text-xs text-gray-400">{info.year}</p>}
-            </Link>
-          );
-        })}
-      </div>
-
-      {pagination.pages > 1 && (
-        <div className="mt-8 flex justify-center gap-4">
-          {pagination.page > 1 && (
-            <Link
-              href={`/dashboard/collection?page=${pagination.page - 1}&sort=${sort}`}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              {t('prev')}
-            </Link>
-          )}
-          <span className="text-sm text-gray-500">
-            {t('page_of', { page: pagination.page, pages: pagination.pages })}
-          </span>
-          {pagination.page < pagination.pages && (
-            <Link
-              href={`/dashboard/collection?page=${pagination.page + 1}&sort=${sort}`}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              {t('next')}
-            </Link>
-          )}
+        <div className="min-w-0">
+          <div className="text-base leading-tight font-semibold">
+            {t('header_title', { username: tokenRow.discogsUsername })}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {t('header_subtitle', {
+              username: tokenRow.discogsUsername,
+              count: collection.pagination.items,
+            })}
+          </div>
         </div>
-      )}
+      </header>
+
+      <CollectionView
+        initialReleases={uniqueReleases}
+        totalCount={collection.pagination.items}
+        totalPages={collection.pagination.pages}
+      />
     </div>
   );
 }

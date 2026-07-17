@@ -75,6 +75,10 @@
 
   --color-background: var(--background);
 
+  --color-vinyl-gold: var(--vinyl-gold);
+
+  --color-vinyl-gold-foreground: var(--vinyl-gold-foreground);
+
   --radius-sm: calc(var(--radius) * 0.6);
 
   --radius-md: calc(var(--radius) * 0.8);
@@ -154,6 +158,10 @@
   --sidebar-border: oklch(0.922 0 0);
 
   --sidebar-ring: oklch(0.708 0 0);
+
+  --vinyl-gold: oklch(0.78 0.14 75);
+
+  --vinyl-gold-foreground: oklch(0.205 0 0);
 }
 
 .dark {

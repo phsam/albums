@@ -1,10 +1,20 @@
 'use server';
 
+import { auth } from '@clerk/nextjs/server';
+import { eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { getUserCollection } from '@/libs/Discogs';
+import { discogsTokensSchema } from '@/models/Schema';
 
 export async function fetchCollectionPage(page: number) {
-  const tokenRow = await db.query.discogsTokensSchema.findFirst();
+  const { userId } = await auth();
+  if (!userId) {
+    return null;
+  }
+
+  const tokenRow = await db.query.discogsTokensSchema.findFirst({
+    where: eq(discogsTokensSchema.userId, userId),
+  });
   if (!tokenRow) {
     return null;
   }

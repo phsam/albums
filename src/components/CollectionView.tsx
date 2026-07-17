@@ -1,9 +1,11 @@
 'use client';
 
 import { ChevronDown, Grid2X2, Grid3X3, LayoutGrid, Loader2, Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { fetchCollectionPage } from '@/app/[locale]/actions';
+import { CollectionBins } from '@/components/CollectionBins';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +21,8 @@ import {
 import { cn } from '@/lib/utils';
 import type { DiscogsCollectionItem } from '@/libs/Discogs';
 import { Link } from '@/libs/I18nNavigation';
+
+type ViewMode = 'bins' | 'grid';
 
 const SORT_KEYS = ['artist', 'title', 'year'] as const;
 type SortKey = (typeof SORT_KEYS)[number];
@@ -97,6 +101,8 @@ type CollectionViewProps = {
 };
 
 export function CollectionView(props: CollectionViewProps) {
+  const t = useTranslations('CollectionPage');
+  const [mode, setMode] = useState<ViewMode>('bins');
   const [releases, setReleases] = useState(props.initialReleases);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('artist');
@@ -276,143 +282,26 @@ export function CollectionView(props: CollectionViewProps) {
     setFilters({ year: [], genre: [], style: [], label: [], format: [] });
   }
 
-  return (
-    <div className="px-4 py-8">
-      <div className="mb-6 space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-48 flex-1">
-            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search albums or artists…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-              }}
-              className="pl-8"
-            />
-          </div>
+  let countLine: string;
+  if (hasAnyFilter) {
+    countLine = t('filtered_count', { shown: sorted.length, total: releases.length });
+  } else if (mode === 'bins') {
+    countLine = t('count_grouped', { count: props.totalCount });
+  } else {
+    countLine = t('total_records', { count: props.totalCount });
+  }
 
-          <FilterPopover
-            label="Year"
-            options={options.year}
-            selected={filters.year}
-            onToggle={(v) => {
-              toggleFilter('year', v);
-            }}
-          />
-          <FilterPopover
-            label="Genre"
-            options={options.genre}
-            selected={filters.genre}
-            onToggle={(v) => {
-              toggleFilter('genre', v);
-            }}
-          />
-          <FilterPopover
-            label="Style"
-            options={options.style}
-            selected={filters.style}
-            onToggle={(v) => {
-              toggleFilter('style', v);
-            }}
-          />
-          <FilterPopover
-            label="Label"
-            options={options.label}
-            selected={filters.label}
-            onToggle={(v) => {
-              toggleFilter('label', v);
-            }}
-          />
-          <FilterPopover
-            label="Format"
-            options={options.format}
-            selected={filters.format}
-            onToggle={(v) => {
-              toggleFilter('format', v);
-            }}
-          />
-
-          <Select
-            value={sort}
-            onValueChange={(v) => {
-              if (isSortKey(v)) {
-                setSort(v);
-              }
-            }}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="artist">Artist name</SelectItem>
-              <SelectItem value="title">Release name</SelectItem>
-              <SelectItem value="year">Year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="flex items-center rounded-md border">
-            {(
-              [
-                ['sm', Grid3X3],
-                ['md', Grid2X2],
-                ['lg', LayoutGrid],
-              ] as const
-            ).map(([size, Icon]) => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => {
-                  setGridSize(size);
-                }}
-                className={cn(
-                  'flex h-9 w-9 items-center justify-center transition-colors',
-                  'first:rounded-l-md last:rounded-r-md',
-                  gridSize === size
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/50',
-                )}
-              >
-                <Icon className="size-4" />
-              </button>
-            ))}
-          </div>
-
-          {hasAnyFilter && (
-            <Button variant="ghost" size="sm" onClick={clearAll}>
-              <X className="size-4" />
-              Clear
-            </Button>
-          )}
-        </div>
-
-        {totalFilters > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {FILTER_KEYS.flatMap((key) =>
-              filters[key].map((v) => (
-                <Badge
-                  key={`${key}:${v}`}
-                  variant="secondary"
-                  className="cursor-pointer gap-1"
-                  onClick={() => {
-                    toggleFilter(key, v);
-                  }}
-                >
-                  {v}
-                  <X className="size-3" />
-                </Badge>
-              )),
-            )}
-          </div>
-        )}
-
-        <p className="text-sm text-muted-foreground">
-          {hasAnyFilter
-            ? `${sorted.length} of ${releases.length} shown`
-            : `${props.totalCount} records`}
-        </p>
-      </div>
-
+  let content: React.ReactNode;
+  if (visible.length === 0) {
+    content = (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        {t('no_results', { query: search })}
+      </p>
+    );
+  } else if (mode === 'bins') {
+    content = <CollectionBins items={visible} />;
+  } else {
+    content = (
       <div className={cn('grid', GRID_CLASSES[gridSize])}>
         {sorted.map((item) => {
           const info = item.basic_information;
@@ -441,6 +330,173 @@ export function CollectionView(props: CollectionViewProps) {
           );
         })}
       </div>
+    );
+  }
+
+  return (
+    <div className="px-4 py-8">
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-md border">
+            {(
+              [
+                ['bins', t('bins_tab')],
+                ['grid', t('grid_tab')],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setMode(value);
+                }}
+                className={cn(
+                  'h-9 px-3.5 text-sm font-medium transition-colors',
+                  'first:rounded-l-md last:rounded-r-md',
+                  mode === value
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative min-w-48 flex-1">
+            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('search_placeholder')}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+              }}
+              className="pl-8"
+            />
+          </div>
+
+          {mode === 'grid' && (
+            <>
+              <FilterPopover
+                label={t('filter_year')}
+                options={options.year}
+                selected={filters.year}
+                onToggle={(v) => {
+                  toggleFilter('year', v);
+                }}
+              />
+              <FilterPopover
+                label={t('filter_genre')}
+                options={options.genre}
+                selected={filters.genre}
+                onToggle={(v) => {
+                  toggleFilter('genre', v);
+                }}
+              />
+              <FilterPopover
+                label={t('filter_style')}
+                options={options.style}
+                selected={filters.style}
+                onToggle={(v) => {
+                  toggleFilter('style', v);
+                }}
+              />
+              <FilterPopover
+                label={t('filter_label')}
+                options={options.label}
+                selected={filters.label}
+                onToggle={(v) => {
+                  toggleFilter('label', v);
+                }}
+              />
+              <FilterPopover
+                label={t('filter_format')}
+                options={options.format}
+                selected={filters.format}
+                onToggle={(v) => {
+                  toggleFilter('format', v);
+                }}
+              />
+
+              <Select
+                value={sort}
+                onValueChange={(v) => {
+                  if (isSortKey(v)) {
+                    setSort(v);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="artist">{t('sort_option_artist')}</SelectItem>
+                  <SelectItem value="title">{t('sort_option_title')}</SelectItem>
+                  <SelectItem value="year">{t('sort_option_year')}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center rounded-md border">
+                {(
+                  [
+                    ['sm', Grid3X3],
+                    ['md', Grid2X2],
+                    ['lg', LayoutGrid],
+                  ] as const
+                ).map(([size, Icon]) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      setGridSize(size);
+                    }}
+                    className={cn(
+                      'flex h-9 w-9 items-center justify-center transition-colors',
+                      'first:rounded-l-md last:rounded-r-md',
+                      gridSize === size
+                        ? 'bg-muted text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/50',
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {hasAnyFilter && (
+            <Button variant="ghost" size="sm" onClick={clearAll}>
+              <X className="size-4" />
+              {t('clear_filters')}
+            </Button>
+          )}
+        </div>
+
+        {totalFilters > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {FILTER_KEYS.flatMap((key) =>
+              filters[key].map((v) => (
+                <Badge
+                  key={`${key}:${v}`}
+                  variant="secondary"
+                  className="cursor-pointer gap-1"
+                  onClick={() => {
+                    toggleFilter(key, v);
+                  }}
+                >
+                  {v}
+                  <X className="size-3" />
+                </Badge>
+              )),
+            )}
+          </div>
+        )}
+
+        <p className="text-sm text-muted-foreground">{countLine}</p>
+      </div>
+
+      {content}
 
       <div ref={sentinelRef} className="mt-8 flex justify-center">
         {loading && <Loader2 className="size-5 animate-spin text-muted-foreground" />}
